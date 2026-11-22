@@ -1,36 +1,173 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Stock Average Calculator
 
-## Getting Started
+เว็บแอปสำหรับคำนวณต้นทุนเฉลี่ยหุ้น เมื่อซื้อหุ้นเพิ่ม ช่วยให้รู้ว่าหากซื้อหุ้นในราคาและจำนวนเงินที่กำหนด ต้นทุนเฉลี่ยต่อหุ้นจะเปลี่ยนไปเท่าไหร่
 
-First, run the development server:
+พัฒนาขึ้นเพื่อใช้งานส่วนตัวและแชร์ให้เพื่อน โดยเน้นความเรียบง่าย ใช้งานสะดวก และไม่จำเป็นต้องสมัครสมาชิก
+
+## ฟีเจอร์หลัก
+
+### 1. คำนวณต้นทุนเฉลี่ยหุ้น
+- กรอกชื่อหุ้น (Ticker) เช่น NVDA, TSLA, SNDK
+- ระบุจำนวนหุ้นที่ถืออยู่และต้นทุนเฉลี่ยเดิม
+- เพิ่มรายการซื้อหุ้นได้หลายรายการ
+- คำนวณต้นทุนเฉลี่ยใหม่อัตโนมัติเมื่อกรอกข้อมูล
+- รองรับการซื้อหุ้นแบบเศษส่วน (Fractional Shares)
+
+### 2. รองรับหลายสกุลเงิน
+- รองรับ USD และ THB
+- กำหนดอัตราแลกเปลี่ยนได้เอง
+- เลือกสกุลเงินที่ใช้แสดงผลลัพธ์ได้
+
+### 3. คำนวณค่าธรรมเนียม
+- รองรับค่าธรรมเนียมแบบเปอร์เซ็นต์
+- รองรับค่าธรรมเนียมแบบจำนวนเงินคงที่
+- สามารถเปิดหรือปิดการคำนวณค่าธรรมเนียมได้
+
+### 4. จำลองและบันทึกการซื้อจริง
+- **Simulation:** ทดลองคำนวณต้นทุนเฉลี่ยก่อนตัดสินใจซื้อ
+- **Actual Purchase:** บันทึกรายการซื้อหุ้นที่เกิดขึ้นจริง
+
+ระบบแยกประเภทรายการทั้งสองแบบอย่างชัดเจน
+
+### 5. แสดงผลการคำนวณ
+- ต้นทุนเฉลี่ยเดิมและต้นทุนเฉลี่ยใหม่
+- จำนวนหุ้นทั้งหมด
+- เงินลงทุนรวม
+- เปอร์เซ็นต์การเปลี่ยนแปลงของต้นทุนเฉลี่ย
+- มูลค่าหุ้นตามราคาตลาด
+- กำไรหรือขาดทุนที่ยังไม่เกิดขึ้นจริง (Unrealized P/L)
+
+### 6. จัดการประวัติ
+- บันทึก แก้ไข และลบรายการคำนวณ
+- ทำสำเนารายการ
+- ค้นหาและกรองประวัติ
+- รองรับการจัดการหุ้นหลายตัว
+
+### 7. ส่งออกข้อมูล
+สามารถ Export ประวัติการคำนวณเป็นไฟล์ CSV เพื่อนำไปเปิดใน Excel ได้
+
+### 8. การตั้งค่าหน้าตาเว็บไซต์
+- รองรับ Dark Mode และ Light Mode
+- รองรับมือถือและคอมพิวเตอร์
+- ข้อมูลที่กำลังกรอกยังอยู่เมื่อ Refresh หน้าเว็บ
+
+## สูตรคำนวณ
+
+ระบบใช้ USD เป็นสกุลเงินหลัก หากกรอกเป็น THB จะทำการแปลงค่าเงินก่อนคำนวณ
+
+```text
+ต้นทุนเดิม
+= จำนวนหุ้นเดิม × ต้นทุนเฉลี่ยเดิม
+
+จำนวนหุ้นที่ซื้อเพิ่ม
+= เงินลงทุน ÷ ราคาซื้อ
+
+จำนวนหุ้นทั้งหมด
+= จำนวนหุ้นเดิม + จำนวนหุ้นที่ซื้อเพิ่ม
+
+เงินลงทุนรวม
+= ต้นทุนเดิม + เงินซื้อเพิ่มทั้งหมด + ค่าธรรมเนียม
+
+ต้นทุนเฉลี่ยใหม่
+= เงินลงทุนรวม ÷ จำนวนหุ้นทั้งหมด
+```
+
+## การจัดเก็บข้อมูล
+
+ใช้ LocalStorage ใน Browser เพื่อจัดเก็บประวัติการคำนวณและการตั้งค่าของผู้ใช้
+
+- ไม่ต้องสมัครสมาชิก
+- ไม่ต้องใช้ Database
+- ข้อมูลของแต่ละคนแยกจากกัน
+- ข้อมูลจะอยู่ใน Browser และอุปกรณ์ที่ใช้งานเท่านั้น
+
+## ระบบดึงราคาหุ้น (Auto Price)
+
+เว็บไซต์สามารถใช้งานได้โดยไม่ต้องเชื่อมต่อ Stock API โดยผู้ใช้กรอกราคาหุ้นเองได้
+
+นอกจากนี้ยังมีระบบ Auto Price สำหรับดึงราคาหุ้นจากผู้ให้บริการภายนอก โดยออกแบบให้สามารถเปลี่ยนผู้ให้บริการได้ในอนาคต
+
+**การทำงาน**
+1. ผู้ใช้เลือกหุ้นที่ต้องการ
+2. เว็บไซต์ส่งคำขอไปยัง API ของตัวเอง
+3. Server ติดต่อผู้ให้บริการข้อมูลหุ้น
+4. ส่งราคากลับมาแสดงบนเว็บไซต์
+
+API Key จะถูกเก็บไว้บน Server ไม่เปิดเผยให้ Browser เข้าถึง
+
+ปัจจุบันรองรับการเชื่อมต่อ Finnhub โดย Auto Price ปิดไว้เป็นค่าเริ่มต้น
+
+หมายเหตุ: การใช้งาน API ต้องตรวจสอบข้อกำหนดด้านสิทธิ์การใช้และการแสดงข้อมูลของผู้ให้บริการ โดยเฉพาะกรณีแชร์เว็บไซต์ให้ผู้อื่นใช้งาน
+
+## เทคโนโลยีที่ใช้
+
+| เทคโนโลยี | รายละเอียด |
+|---|---|
+| Next.js 16 | Framework |
+| TypeScript | Programming Language |
+| Tailwind CSS v4 | Styling |
+| shadcn/ui | UI Components |
+| Lucide | Icons |
+| Vitest | Testing |
+| Vercel | Hosting |
+
+## การติดตั้งและใช้งาน
+
+**สิ่งที่ต้องมี**
+- Node.js 20.9 ขึ้นไป
+- npm
+
+**ติดตั้ง Dependencies**
+
+```bash
+npm install
+```
+
+**เริ่มต้นใช้งาน**
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+เปิดเว็บไซต์ที่:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**คำสั่งเพิ่มเติม**
 
-## Learn More
+```bash
+npm test
+npm run lint
+npm run typecheck
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+## การตั้งค่า Finnhub API (ไม่บังคับ)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. สมัครสมาชิกที่ https://finnhub.io
+2. สร้าง API Key จาก Dashboard
+3. สร้างไฟล์ `.env.local` ในโฟลเดอร์หลักของโปรเจกต์
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```env
+STOCK_PRICE_PROVIDER=finnhub
+FINNHUB_API_KEY=your_api_key
+```
 
-## Deploy on Vercel
+ห้ามนำ API Key ไปใส่ใน Frontend หรือเผยแพร่ขึ้น GitHub
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## การ Deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+สามารถ Deploy เว็บไซต์ผ่าน Vercel ได้โดย
+
+1. Push โปรเจกต์ขึ้น GitHub
+2. เข้า https://vercel.com
+3. Import Repository ที่ต้องการ
+4. กด Deploy
+
+หากไม่ใช้ Auto Price ไม่จำเป็นต้องตั้งค่า API Key เพิ่มเติม
+
+---
+
+โปรเจกต์นี้จัดทำขึ้นเพื่อช่วยคำนวณต้นทุนและวางแผนการลงทุนส่วนบุคคลเท่านั้น ไม่ใช่คำแนะนำในการลงทุน
